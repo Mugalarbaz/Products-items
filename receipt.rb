@@ -15,36 +15,27 @@ class Receipt
 
   def calculate_total
     total_price = 0.0
+    item_details = []
 
     @items.each do |item, quantity|
       unit_price = @pricing_table[item].unit_price
       sale_price_quantity = @pricing_table[item].sale_price_quantity
+      price_paid_for_item = 0.0
 
       if sale_price_quantity && quantity >= sale_price_quantity
         sale_count = quantity / sale_price_quantity
         remaining_count = quantity % sale_price_quantity
-
-        total_price += (sale_count * @pricing_table[item].sale_price + remaining_count * unit_price)
+        price_paid_for_item = (sale_count * @pricing_table[item].sale_price + remaining_count * unit_price)
       else
-        total_price += quantity * unit_price
+        price_paid_for_item = quantity * unit_price
       end
+
+      total_price += price_paid_for_item
+      item_details << [item, quantity, price_paid_for_item]
     end
 
-    total_price
+    [total_price, item_details]
   end
-
-  def print_receipt
-    puts "\nItem     Quantity      Price\n--------------------------------------"
-    @items.each do |item, quantity|
-      unit_price = @pricing_table[item].unit_price
-      puts "#{item.ljust(8)} #{quantity.to_s.ljust(12)} $#{'%.2f' % (quantity * unit_price)}"
-    end
-    total_price = calculate_total
-    puts "\nTotal price : $#{'%.2f' % total_price}"
-    puts "You saved $#{'%.2f' % calculate_saved_amount(total_price)} today."
-  end
-
-  private
 
   def calculate_saved_amount(total_price)
     original_price = @items.sum { |item, quantity| quantity * @pricing_table[item].unit_price }
